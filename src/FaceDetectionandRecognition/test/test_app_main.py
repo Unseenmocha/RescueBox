@@ -7,6 +7,7 @@ import shutil
 import pytest
 import sys
 import onnxruntime
+from facematch.facematch.database_functions import get_chroma_server_instance
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
 sys.path.insert(0, project_root)
@@ -75,6 +76,8 @@ class TestFaceMatch(RBAppTest):
                 if cls.full_collection_name in collection_names:
                     DBclient.delete_collection(cls.full_collection_name)
                     print(f"Deleted test collection: {cls.full_collection_name}")
+                chroma_process = get_chroma_server_instance()
+                chroma_process.terminate()
         except Exception as e:
             print(f"Error during cleanup: {str(e)}")
 

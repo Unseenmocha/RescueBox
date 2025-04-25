@@ -2,10 +2,56 @@ import pandas as pd
 import numpy as np
 import chromadb
 import json
+import time
+import os
+import subprocess
+import socket
+from dotenv import load_dotenv
 
 from facematch.facematch.utils.resource_path import get_config_path
 
-client = chromadb.HttpClient(host="localhost", port=8000)
+load_dotenv()
+
+chroma_host = os.environ.get('CHROMA_HOST')
+chroma_port = port=os.environ.get('CHROMA_PORT')
+
+# Start Chroma server
+process = subprocess.Popen(
+    ["chroma", "run", "--path", "../../resources/data"],
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE,
+)
+
+timeout = 30
+port_open = False
+start_time = time.time()
+while (time.time() - start_time < timeout) and not port_open:
+    try:
+        with socket.create_connection((chroma_host, chroma_port), timeout=timeout):
+            port_open = True  
+    except (socket.timeout, ConnectionRefusedError):
+        pass
+
+    if port_open:
+        print(f"Chroma DB server is running on {chroma_host}:{chroma_port}")
+
+    if process.poll() is not None:
+        stderr = process.stderr.read()
+
+    # Check if process crashed
+    if process.poll() is not None:
+        stderr = process.stderr.read()
+        raise RuntimeError(f"Chroma server failed to start:\n{stderr}")
+    
+    time.sleep(0.5)
+
+try:
+    with socket.create_connection((chroma_host, chroma_port), timeout=timeout):
+        port_open = True  
+except (socket.timeout, ConnectionRefusedError):
+    raise RuntimeError(f"Chroma server failed to start")
+
+client = chromadb.HttpClient(host=os.environ.get('CHROMA_HOST'), port=os.environ.get('CHROMA_PORT'))
 
 # Get models from config file.
 db_config_path = get_config_path("db_config.json")
@@ -23,6 +69,8 @@ construction_ef = db_config["hnsw:construction_ef"]
 search_ef = db_config["hnsw:search_ef"]
 M = db_config["hnsw:M"]
 
+def get_chroma_server_instance():
+    return process
 
 def get_collection(collection, client):
     return client.get_or_create_collection(
