@@ -34,7 +34,7 @@ from facematch.facematch.utils.logger import log_info
 
 load_dotenv()
 DBclient = chromadb.HttpClient(
-    host=os.environ.get("CHROMA_HOST"), port=os.environ.get("CHROMA_PORT")
+    host='localhost', port=8000
 )
 
 APP_NAME = "face-match"

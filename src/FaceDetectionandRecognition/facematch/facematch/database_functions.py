@@ -12,8 +12,8 @@ from facematch.facematch.utils.resource_path import get_config_path
 
 load_dotenv()
 
-chroma_host = os.environ.get('CHROMA_HOST')
-chroma_port = port=os.environ.get('CHROMA_PORT')
+chroma_host = 'localhost' # os.environ.get('CHROMA_HOST')
+chroma_port = 8000 # port=os.environ.get('CHROMA_PORT')
 
 # Start Chroma server
 process = subprocess.Popen(
@@ -51,7 +51,7 @@ try:
 except (socket.timeout, ConnectionRefusedError):
     raise RuntimeError(f"Chroma server failed to start")
 
-client = chromadb.HttpClient(host=os.environ.get('CHROMA_HOST'), port=os.environ.get('CHROMA_PORT'))
+client = chromadb.HttpClient(host=chroma_host, port=chroma_port)
 
 # Get models from config file.
 db_config_path = get_config_path("db_config.json")
