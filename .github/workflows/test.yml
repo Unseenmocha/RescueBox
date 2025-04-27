@@ -23,6 +23,12 @@ jobs:
         run: |
           pip install poetry
           poetry install --with api --with dev
+      
+      - name: Install ONNX Models from Google Drive
+        run: |
+          pip install gdown
+          gdown "1oDt1i80rUew0UhtY3UiW9EIyd2WfJTZf" --fuzzy -O src/facematch/models/retinaface-resnet50.onnx --continue
+          gdown "1CVCmumM_6C7giGAXJUwHWT--DPFC9bpI" --fuzzy -O src/facematch/models/facenet512_model.onnx --continue
 
       - name: Run tests
         run: poetry run pytest
