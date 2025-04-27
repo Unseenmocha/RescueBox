@@ -7,7 +7,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 
-from facematch.facematch.utils.get_embeddings import get_embedding
+from facematch.facematch.utils.get_batch_embeddings import get_embedding
 
 # Set up logging
 logging.basicConfig(
