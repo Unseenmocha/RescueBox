@@ -1,12 +1,17 @@
 import os
-import json
 import uuid
 import unittest
 from pathlib import Path
-import shutil
 import pytest
 import sys
 import onnxruntime
+
+from facematch.facematch.face_match_server import (
+    app as cli_app,
+    APP_NAME,
+    server,
+    DB,
+)
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
 sys.path.insert(0, project_root)
@@ -39,13 +44,6 @@ except ImportError:
     print("Failed to import rb modules. Attempting a different approach...")
     rb_imported = False
 
-from facematch.facematch.face_match_server import (
-    app as cli_app,
-    APP_NAME,
-    server,
-    DB,
-)
-
 
 TEST_IMAGES_DIR = Path("src/FaceDetectionandRecognition/resources/sample_db")
 TEST_FACES_DIR = Path(
@@ -74,7 +72,7 @@ class TestFaceMatch(RBAppTest):
         )
 
         print("=" * 80)
-        print(f"Test setup complete. Using CPU mode for testing with ONNX Runtime.")
+        print("Test setup complete. Using CPU mode for testing with ONNX Runtime.")
         print(f"Test images available: {cls.has_test_images}")
         print(f"Testing with collection: {cls.test_collection_name}")
         print("=" * 80)
@@ -259,7 +257,7 @@ class TestFaceMatch(RBAppTest):
         assert "Successfully uploaded" in result_text or "No faces" in result_text
 
         # If successful, verify the collection exists
-        if "Successfully uploaded" in result_text and not "0 faces" in result_text:
+        if "Successfully uploaded" in result_text and "0 faces" not in result_text:
             collections = DB.client.list_collections()
             collection_names = [col.name for col in collections]
             print(collection_names)
@@ -437,8 +435,8 @@ class TestFaceMatch(RBAppTest):
         assert cli_delete_result.exit_code == 0
 
         print(
-            f"\nCOMPARISON: Direct function call returns detailed results, "
-            f"while CLI commands appear to be running successfully but not returning output."
+            "\nCOMPARISON: Direct function call returns detailed results, "
+            "while CLI commands appear to be running successfully but not returning output."
         )
 
     def test_10_cli_parsers(self):
