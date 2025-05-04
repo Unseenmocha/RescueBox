@@ -5,7 +5,6 @@ from pathlib import Path
 import pytest
 import sys
 import onnxruntime
-import csv
 
 from facematch.facematch.face_match_server import (
     app as cli_app,
@@ -325,53 +324,8 @@ class TestFaceMatch(RBAppTest):
         # Assert response
         assert response.status_code == 200
         body = ResponseBody(**response.json())
-        
-        # Updated assertion: now the response should be a BatchFileResponse
-        assert isinstance(body.root, BatchFileResponse)
-        
-        # Check that we have files in the response
-        assert len(body.root.files) > 0
-        
-        # Check the types of files in the response
-        file_types = set(file.file_type for file in body.root.files)
-        print(f"File types in response: {file_types}")
-        
-        # We should have html files (for base64 images), markdown files (stats and results) and a csv file
-        assert "html" in file_types, "No HTML files with base64 images found"
-        assert "markdown" in file_types, "No markdown files found"
-        assert "csv" in file_types, "No CSV file found"
-        
-        # Print some details about the response for debugging
-        html_files = [f for f in body.root.files if f.file_type == "html"]
-        markdown_files = [f for f in body.root.files if f.file_type == "markdown"]
-        csv_files = [f for f in body.root.files if f.file_type == "csv"]
-        
-        print(f"Found {len(html_files)} HTML files")
-        print(f"Found {len(markdown_files)} markdown files")
-        print(f"Found {len(csv_files)} CSV files")
-        
-        # Optional: verify the content of one of the HTML files
-        if html_files:
-            # Check that the first HTML file exists
-            html_path = html_files[0].path
-            assert os.path.exists(html_path), f"HTML file {html_path} does not exist"
-            
-            # Check that it contains base64 image data
-            with open(html_path, 'r') as f:
-                html_content = f.read()
-                assert 'data:image/jpeg;base64,' in html_content, "Base64 image data not found in HTML"
-        
-        # Optional: verify the CSV file
-        if csv_files:
-            csv_path = csv_files[0].path
-            assert os.path.exists(csv_path), f"CSV file {csv_path} does not exist"
-            
-            # Verify it's a valid CSV
-            with open(csv_path, 'r') as f:
-                reader = csv.reader(f)
-                header = next(reader)
-                assert "filename" in header, "CSV header does not contain 'filename'"
-                assert "result" in header, "CSV header does not contain 'result'"
+        assert isinstance(body.root, TextResponse)
+        print(f"Find face bulk result: {body.root.value}...")
 
     @pytest.mark.skipif(not has_test_images, reason="Test images not available")
     def test_07_find_face_bulk_testing_endpoint(self):

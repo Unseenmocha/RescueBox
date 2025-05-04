@@ -6,8 +6,6 @@ from typing import List, TypedDict
 from PIL import Image
 import tempfile
 import csv
-import io
-import base64
 
 from rb.lib.ml_service import MLService
 from rb.api.models import (
@@ -325,56 +323,21 @@ def find_face_bulk_endpoint(
         # path to the *match*
         match_path = matches[0]
         match_name = os.path.splitext(os.path.basename(match_path))[0].rsplit('_', 1)[0]
-        # # path to the composite image
-        # if match_name == query_name:
-        #     comp_path = f"/tmp/{query_name}_pair.jpg"
-        # else:
-        #     comp_path = f"/tmp/wrong_match_{match_name}.jpg"
-        # # create the composite image
-        # make_composite(query_path, match_path, comp_path)
+        # path to the composite image
+        if match_name == query_name:
+            comp_path = f"/tmp/{query_name}_pair.jpg"
+        else:
+            comp_path = f"/tmp/wrong_match_{match_name}.jpg"
+        # create the composite image
+        make_composite(query_path, match_path, comp_path)
 
-        # Create composite image in memory
-        im1, im2 = Image.open(query_path), Image.open(match_path)
-        # resize them to the same height
-        h = max(im1.height, im2.height)
-        im1 = im1.resize((int(im1.width * h / im1.height), h))
-        im2 = im2.resize((int(im2.width * h / im2.height), h))
-        out = Image.new("RGB", (im1.width + im2.width, h))
-        out.paste(im1, (0, 0))
-        out.paste(im2, (im1.width, 0))
-
-
-        # Convert to base64
-        buffer = io.BytesIO()
-        out.save(buffer, format="JPEG")
-        img_str = base64.b64encode(buffer.getvalue()).decode()
-        
-        # Create a temporary HTML file with the base64 image
-        html_fd, html_path = tempfile.mkstemp(suffix=".html")
-        with os.fdopen(html_fd, "w") as html_file:
-            html_file.write(f"""
-            <html>
-            <body>
-                <img src="data:image/jpeg;base64,{img_str}" alt="{query_name} vs {match_name}">
-            </body>
-            </html>
-            """)
-        
         files.append(
             FileResponse(
-                file_type="html",  
-                path=html_path,
+                file_type="img",
+                path=comp_path,
                 title=query_name + " vs " + match_name
             )
         )
-
-        # files.append(
-        #     FileResponse(
-        #         file_type="img",
-        #         path=comp_path,
-        #         title=query_name + " vs " + match_name
-        #     )
-        # )
     
     # 1) start the table
     lines = [
