@@ -104,34 +104,26 @@ class TestFaceMatch(RBAppTest):
         from facematch.facematch.face_match_server import (
             get_ingest_query_image_task_schema,
             get_ingest_bulk_query_image_task_schema,
-            get_ingest_bulk_test_query_image_task_schema,
             get_ingest_images_task_schema,
             delete_collection_task_schema,
-            list_collections_task_schema,
         )
 
         return [
-            (0, "findface", "Find Face", get_ingest_query_image_task_schema()),
+            (0, "bulkupload", "Bulk Upload", get_ingest_images_task_schema()),
+            (1, "findface", "Find Face", get_ingest_query_image_task_schema()),
             (
-                1,
+                2,
                 "findfacebulk",
                 "Face Find Bulk",
                 get_ingest_bulk_query_image_task_schema(),
             ),
+            
             (
-                2,
-                "findfacebulktesting",
-                "Face Find Bulk Test",
-                get_ingest_bulk_test_query_image_task_schema(),
-            ),
-            (3, "bulkupload", "Bulk Upload", get_ingest_images_task_schema()),
-            (
-                4,
+                3,
                 "deletecollection",
                 "Delete Collection",
                 delete_collection_task_schema(),
             ),
-            (5, "listcollections", "List Collection", list_collections_task_schema()),
         ]
 
     def get_expected_routes(self):
@@ -141,37 +133,25 @@ class TestFaceMatch(RBAppTest):
                 "task_schema": f"/{APP_NAME}/findface/task_schema",
                 "run_task": f"/{APP_NAME}/findface",
                 "short_title": "Find Face",
-                "order": 0,
+                "order": 1,
             },
             {
                 "task_schema": f"/{APP_NAME}/findfacebulk/task_schema",
                 "run_task": f"/{APP_NAME}/findfacebulk",
                 "short_title": "Face Find Bulk",
-                "order": 1,
-            },
-            {
-                "task_schema": f"/{APP_NAME}/findfacebulktesting/task_schema",
-                "run_task": f"/{APP_NAME}/findfacebulktesting",
-                "short_title": "Face Find Bulk Test",
                 "order": 2,
             },
             {
                 "task_schema": f"/{APP_NAME}/bulkupload/task_schema",
                 "run_task": f"/{APP_NAME}/bulkupload",
                 "short_title": "Bulk Upload",
-                "order": 3,
+                "order": 0,
             },
             {
                 "task_schema": f"/{APP_NAME}/deletecollection/task_schema",
                 "run_task": f"/{APP_NAME}/deletecollection",
                 "short_title": "Delete Collection",
-                "order": 4,
-            },
-            {
-                "task_schema": f"/{APP_NAME}/listcollections/task_schema",
-                "run_task": f"/{APP_NAME}/listcollections",
-                "short_title": "List Collection",
-                "order": 5,
+                "order": 3,
             },
         ]
 
@@ -189,7 +169,6 @@ class TestFaceMatch(RBAppTest):
             get_ingest_bulk_query_image_task_schema,
             get_ingest_images_task_schema,
             delete_collection_task_schema,
-            list_collections_task_schema,
         )
 
         # Test that each schema returns a valid TaskSchema object
@@ -198,7 +177,6 @@ class TestFaceMatch(RBAppTest):
             get_ingest_bulk_query_image_task_schema(),
             get_ingest_images_task_schema(),
             delete_collection_task_schema(),
-            list_collections_task_schema(),
         ]
 
         for schema in schemas:
@@ -338,6 +316,8 @@ class TestFaceMatch(RBAppTest):
                 f"Test collection {self.__class__.full_collection_name} not available"
             )
 
+        import pdb; pdb.set_trace()
+
         find_face_bulk_testing_api = f"/{APP_NAME}/findfacebulktesting"
         input_data = {
             "inputs": {"query_directory": {"path": str(TEST_FACES_DIR)}},
@@ -363,11 +343,7 @@ class TestFaceMatch(RBAppTest):
 
         delete_collection_api = f"/{APP_NAME}/deletecollection"
 
-        input_data = {
-            "inputs": {
-                "collection_name": {"text": self.__class__.test_collection_name},
-                "detector_backend": {"text": TEST_DETECTOR_BACKEND},
-                "model_name": {"text": TEST_MODEL_NAME},
+        input_data = { "inputs": {},"parameters": { "collection_name": self.__class__.test_collection_name,
             }
         }
 
@@ -393,16 +369,14 @@ class TestFaceMatch(RBAppTest):
 
     def test_09_direct_vs_cli_commands(self):
         """Compare direct function calls with CLI commands"""
-
         print("\n===== Testing List Collections =====")
         # DIRECT: List collections directly from the DB
         db_collections = DB.client.list_collections()
         db_collection_names = [col.name for col in db_collections]
         print(f"Collections directly from DB: {db_collection_names}")
-
         # CLI: List collections via CLI
         cli_result = self.runner.invoke(
-            self.cli_app, [f"/{APP_NAME}/listcollections", ""]
+            self.cli_app, [f"/{APP_NAME}/listcollections"]
         )
         print(f"CLI exit code: {cli_result.exit_code}")
         print(f"CLI output: {cli_result.output}")
@@ -411,18 +385,15 @@ class TestFaceMatch(RBAppTest):
         print("\n===== Testing Delete Collection =====")
         from facematch.facematch.face_match_server import delete_collection_endpoint
 
-        test_input = {
-            "collection_name": {"text": "nonexistent"},
-            "model_name": {"text": "facenet512"},
-            "detector_backend": {"text": "retinaface"},
+        test_params = {
+            "collection_name": "nonexistent",
         }
 
-        direct_result = delete_collection_endpoint(test_input)
+        direct_result = delete_collection_endpoint(inputs = {}, parameters = test_params)
         print(f"Direct function result: {direct_result.root.value}")
-
         cli_delete_result = self.runner.invoke(
             self.cli_app,
-            [f"/{APP_NAME}/deletecollection", "nonexistent,retinaface,facenet512"],
+            [f"/{APP_NAME}/deletecollection", "", "nonexistent"],
         )
         print(f"CLI delete exit code: {cli_delete_result.exit_code}")
         print(f"CLI delete output: {cli_delete_result.output}")
@@ -448,8 +419,7 @@ class TestFaceMatch(RBAppTest):
             find_face_bulk_param_parser,
             bulk_upload_cli_parser,
             bulk_upload_param_parser,
-            delete_collection_cli_parser,
-            list_collections_cli_parser,
+            delete_collection_parameter_parser,
         )
 
         # Test face_find_cli_parser
@@ -495,21 +465,15 @@ class TestFaceMatch(RBAppTest):
         )
         assert parsed_upload_params["collection_name"] == "test_collection"
 
-        # Test delete_collection_cli_parser
+        # Test delete_collection_param_parser
         delete_param_str = (
-            f"{self.__class__.test_collection_name},retinaface,facenet512"
+            f"{self.__class__.test_collection_name}"
         )
-        parsed_delete_params = delete_collection_cli_parser(delete_param_str)
+        parsed_delete_params = delete_collection_parameter_parser(delete_param_str)
         assert (
             parsed_delete_params["collection_name"]
             == self.__class__.test_collection_name.lower()
         )
-        assert parsed_delete_params["detector_backend"] == "retinaface"
-        assert parsed_delete_params["model_name"] == "facenet512"
-
-        # Test list_collections_cli_parser (simple passthrough function)
-        dummy_input = ""
-        assert list_collections_cli_parser(dummy_input) == dummy_input
 
         print("All CLI parser functions tested successfully")
 

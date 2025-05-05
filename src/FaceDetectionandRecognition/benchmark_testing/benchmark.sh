@@ -183,7 +183,7 @@ cd ../../../
 
 # Delete collection if exists
 if [ "$keep_collection" = "False" ]; then
-    poetry run python $SERVER_PATH /face-match/deletecollection "$collection_name,$MODEL_NAME,$DETECTOR_NAME"
+    poetry run python $SERVER_PATH /face-match/deletecollection "$collection_name" # ,$MODEL_NAME,$DETECTOR_NAME
 fi
 
 # Benchmark bulk upload
