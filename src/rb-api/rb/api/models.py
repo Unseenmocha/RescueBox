@@ -234,6 +234,7 @@ class FileType(Enum):
     AUDIO = "audio"
     VIDEO = "video"
     MARKDOWN = "markdown"
+    HTML = "html"
 
 
 class FileResponse(BaseModel):
