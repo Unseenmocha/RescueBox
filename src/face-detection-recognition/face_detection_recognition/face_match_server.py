@@ -283,11 +283,16 @@ def find_face_bulk_endpoint(
     # Check CUDNN compatability
     check_cuDNN_version()
 
+    full_collection_name = DB.create_full_collection_name(parameters["collection_name"],
+                                                          config["detector_backend"], 
+                                                          config["model_name"],
+                                                          False)
+
     # Call model function to find matches
     status, results = face_match_model.find_face_bulk(
         inputs["query_directory"].path,
         parameters["similarity_threshold"],
-        parameters["collection_name"],
+        full_collection_name,
     )
     log_info(status)
 
@@ -515,8 +520,7 @@ def bulk_upload_endpoint(
         base_collection_name = parameters["dropdown_collection_name"]
     else:
         base_collection_name = parameters["collection_name"]
-    # log_info("ERROR FOLLOWING THIS LINE **************************")
-    # log_info(new_collection_name)
+
     # Check CUDNN compatability
     check_cuDNN_version()
     # Get list of directory paths from input
