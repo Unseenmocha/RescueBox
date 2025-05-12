@@ -34,6 +34,7 @@ def detect_faces_and_get_embeddings(
     input_size=(640, 640),
     visualize=False,
     height_factor=1.5,
+    separate_detections=False, # boolean whether or not to separate detections per img in output,
 ):
     script_dir = os.path.dirname(os.path.abspath(__file__))
     models_dir = os.path.join(script_dir, "models")
@@ -46,7 +47,7 @@ def detect_faces_and_get_embeddings(
 
     if visualize:
         os.makedirs("debug_detections", exist_ok=True)
-
+    
     try:
         if detector_onnx_path is None or not os.path.isfile(detector_onnx_path):
             logger.error(f"ONNX model not found: {detector_onnx_path}")
@@ -74,7 +75,7 @@ def detect_faces_and_get_embeddings(
             
             original_size = (img.shape[1], img.shape[0])
             original_sizes.append(original_size)
-        
+
         all_boxes, all_scores, all_landmarks = [],[],[]
         if detector_backend == "retinaface":
             try:
@@ -89,7 +90,6 @@ def detect_faces_and_get_embeddings(
                     all_boxes.append(boxes)
                     all_scores.append(scores)
                     all_landmarks.append(landmarks)
-
                 if model_name == "Facenet512":
                     # Facenet512 pipeline
                     face_embeddings = process_retinaface_detections_for_facenet512(
@@ -102,6 +102,7 @@ def detect_faces_and_get_embeddings(
                         all_boxes,
                         all_scores,
                         all_landmarks,
+                        separate_detections
                     )
                 elif model_name == "ArcFace":
                     # ArcFace-optimized pipeline
@@ -116,8 +117,8 @@ def detect_faces_and_get_embeddings(
                         all_boxes,
                         all_scores,
                         all_landmarks,
+                        separate_detections
                     )
-
 
                 if len(face_embeddings) > 0:
                     return True, face_embeddings
@@ -218,6 +219,7 @@ def detect_faces_and_get_embeddings(
                 model_name,
                 face_confidence_threshold,
                 detector_backend,
+                separate_detections=separate_detections
             )
 
             if len(face_embeddings) > 0:

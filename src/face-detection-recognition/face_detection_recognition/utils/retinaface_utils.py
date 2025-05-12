@@ -654,6 +654,7 @@ def process_retinaface_detections_for_facenet512(
     all_boxes,
     all_scores,
     all_landmarks,
+    separate_detections, # boolean whether or not to separate detections per img in output
 ):
 
     face_embeddings = []
@@ -661,7 +662,9 @@ def process_retinaface_detections_for_facenet512(
     path_strs = []
     regions = []
 
+    detections_per_image = []
     for boxes, scores, landmarks, image_path, img in zip(all_boxes, all_scores, all_landmarks, image_paths, imgs):
+        detections_per_image.append(len(boxes))
         for i, (box, score, landmark) in enumerate(zip(boxes, scores, landmarks)):
             try:
                 # Get initial box coordinates
@@ -758,26 +761,34 @@ def process_retinaface_detections_for_facenet512(
     except Exception as e:
         logger.error(f"Error getting embedding for face {i}: {str(e)}")
     
-    
-    for i in range(len(embeddings)):
-        if embeddings[i] is not None:
-            bbox = [
-                            regions[i]["x"],
-                            regions[i]["y"],
-                            regions[i]["w"],
-                            regions[i]["h"],
-                        ]
-            image = sha256_image(path_strs[i], bbox)
-            face_embeddings.append(
-                {
-                    "image_path": path_strs[i],
-                    "embedding": embeddings[i],
-                    "bbox": bbox,
-                    "confidence": regions[i]["confidence"],
-                    "sha256_image": image,
-                    "model_name": model_name,
-                }
-            )
+    i = 0
+    for num_detections in detections_per_image:
+        cur_img_face_embeddings = []
+        for _ in range(num_detections):
+            if embeddings[i] is not None:
+                bbox = [
+                                regions[i]["x"],
+                                regions[i]["y"],
+                                regions[i]["w"],
+                                regions[i]["h"],
+                            ]
+                image = sha256_image(path_strs[i], bbox)
+                cur_img_face_embeddings.append(
+                    {
+                        "image_path": path_strs[i],
+                        "embedding": embeddings[i],
+                        "bbox": bbox,
+                        "confidence": regions[i]["confidence"],
+                        "sha256_image": image,
+                        "model_name": model_name,
+                    }
+                )
+            i += 1
+
+        if separate_detections:
+            face_embeddings.append(cur_img_face_embeddings)
+        else:
+            face_embeddings.extend(cur_img_face_embeddings)
 
     return face_embeddings
 
@@ -901,13 +912,16 @@ def process_retinaface_detections_for_arcface(
     all_boxes,
     all_scores,
     all_landmarks,
+    separate_detections, # boolean whether or not to separate detections per img in output
 ):
 
     face_embeddings = []
     detections = []
     path_strs = []
     regions = []
+    detections_per_image = []
     for boxes, scores, landmarks, image_path, img in zip(all_boxes, all_scores, all_landmarks, image_paths, imgs):
+        detections_per_image.append(len(boxes))
         for i, (box, score, landmark) in enumerate(zip(boxes, scores, landmarks)):
             try:
                 # Determine bounding box - use landmarks if available for better box
@@ -1014,24 +1028,33 @@ def process_retinaface_detections_for_arcface(
     except Exception as e:
         logger.error(f"Error getting embedding for face {i}: {str(e)}")
 
-    for i in range(len(embeddings)):
-        if embeddings[i] is not None:
-            bbox = [
-                            regions[i]["x"],
-                            regions[i]["y"],
-                            regions[i]["w"],
-                            regions[i]["h"],
-                        ]
-            image = sha256_image(path_strs[i], bbox)
-            face_embeddings.append(
-                {
-                    "image_path": path_strs[i],
-                    "embedding": embeddings[i],
-                    "bbox": bbox,
-                    "confidence": regions[i]["confidence"],
-                    "sha256_image": image,
-                    "model_name": model_name,
-                }
-            )
+    i = 0
+    for num_detections in detections_per_image:
+        cur_img_face_embeddings = []
+        for _ in range(num_detections):
+            if embeddings[i] is not None:
+                bbox = [
+                                regions[i]["x"],
+                                regions[i]["y"],
+                                regions[i]["w"],
+                                regions[i]["h"],
+                            ]
+                image = sha256_image(path_strs[i], bbox)
+                cur_img_face_embeddings.append(
+                    {
+                        "image_path": path_strs[i],
+                        "embedding": embeddings[i],
+                        "bbox": bbox,
+                        "confidence": regions[i]["confidence"],
+                        "sha256_image": image,
+                        "model_name": model_name,
+                    }
+                )
+            i += 1
+            
+        if separate_detections:
+            face_embeddings.append(cur_img_face_embeddings)
+        else:
+            face_embeddings.extend(cur_img_face_embeddings)
 
     return face_embeddings

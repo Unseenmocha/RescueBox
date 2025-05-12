@@ -55,7 +55,8 @@ class FaceMatchModel:
                     img_paths[start_idx:end_idx],
                     model_name,
                     detector_backend,
-                    face_confidence_threshold
+                    face_confidence_threshold,
+                    separate_detections=False
                 )
 
                 total_files_uploaded += upload_batch_size
@@ -78,7 +79,8 @@ class FaceMatchModel:
                     img_paths[end_idx:],
                     model_name,
                     detector_backend,
-                    face_confidence_threshold
+                    face_confidence_threshold,
+                    separate_detections=False
                 )
                 self.DB.upload_embedding_to_database(
                     embedding_outputs,
@@ -126,6 +128,7 @@ class FaceMatchModel:
                     model_name,
                     detector_backend,
                     face_confidence_threshold,
+                    separate_detections=False
                 )
                 matching_image_paths = []
                 # If image has a valid face, perform similarity check
@@ -184,7 +187,8 @@ class FaceMatchModel:
                     img_paths[start_idx:end_idx],
                     model_name,
                     detector_backend,
-                    face_confidence_threshold
+                    face_confidence_threshold,
+                    separate_detections=True
                 )
 
                 matching_image_paths = self.DB.query_bulk(
@@ -201,9 +205,10 @@ class FaceMatchModel:
                     img_paths[end_idx:],
                     model_name,
                     detector_backend,
-                    face_confidence_threshold
+                    face_confidence_threshold,
+                    separate_detections=True
                 )
-
+                
                 matching_image_paths = self.DB.query_bulk(
                     collection_name,
                     embedding_outputs,

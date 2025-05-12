@@ -138,7 +138,7 @@ class Vector_Database:
     def query_bulk(self, collection, data, n_results, threshold, similarity_filter):
         vectors_per_query = np.array(list(map(lambda query: len(query), data)))
         vectors_per_query_idx = np.cumsum(vectors_per_query)[:-1]
-        query_vectors = [face["embedding"] for face in data]
+        query_vectors = [face["embedding"] for query in data for face in query]
         collection = self.get_collection(collection)
         result = collection.query(
             query_embeddings=query_vectors,

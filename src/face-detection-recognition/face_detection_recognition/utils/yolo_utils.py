@@ -471,6 +471,7 @@ def process_yolo_detections(
     model_name="ArcFace",
     face_confidence_threshold=0.02,
     detector_backend="yolov8",
+    separate_detections=False
 ):
     """Process YOLO face detections and generate embeddings."""
     face_embeddings = []
@@ -478,7 +479,11 @@ def process_yolo_detections(
     path_strs = []
     regions = []
 
+    detections_per_image = []
     for boxes, scores, landmarks, image_path, img in zip(all_boxes, all_scores, all_landmarks, image_paths, imgs):
+
+        detections_per_image.append(len(boxes))
+
         if len(boxes) == 0:
             continue
 
@@ -545,24 +550,34 @@ def process_yolo_detections(
     except Exception as e:
         logger.error(f"Error getting embedding for face {i}: {str(e)}")
 
-    for i in range(len(embeddings)):
-        if embeddings[i] is not None:
-            bbox = [
-                        regions[i]["x"],
-                        regions[i]["y"],
-                        regions[i]["w"],
-                        regions[i]["h"],
-                    ]
-            image = sha256_image(image_paths[i], bbox)
-            face_embeddings.append(
-                {
-                    "image_path": image_paths[i],
-                    "embedding": embeddings[i],
-                    "bbox": bbox,
-                    "confidence": regions[i]["confidence"],
-                    "model_name": model_name,
-                    "sha256_image": image
-                }
-            )
+    i = 0
+    for num_detections in detections_per_image:
+        cur_img_face_embeddings = []
+        for _ in range(num_detections):
+            if embeddings[i] is not None:
+                bbox = [
+                                regions[i]["x"],
+                                regions[i]["y"],
+                                regions[i]["w"],
+                                regions[i]["h"],
+                            ]
+                image = sha256_image(path_strs[i], bbox)
+                cur_img_face_embeddings.append(
+                    {
+                        "image_path": path_strs[i],
+                        "embedding": embeddings[i],
+                        "bbox": bbox,
+                        "confidence": regions[i]["confidence"],
+                        "sha256_image": image,
+                        "model_name": model_name,
+                    }
+                )
+            i += 1
+
+        if separate_detections:
+            face_embeddings.append(cur_img_face_embeddings)
+        else:
+            face_embeddings.extend(cur_img_face_embeddings)
+
 
     return face_embeddings
