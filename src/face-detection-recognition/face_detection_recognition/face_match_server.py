@@ -29,7 +29,7 @@ from rb.api.models import (
     TaskSchema,
     TextParameterDescriptor,
     TextResponse,
-    FileType
+    FileType,
 )
 
 from pydantic import DirectoryPath
@@ -258,7 +258,6 @@ def get_ingest_bulk_query_image_task_schema() -> TaskSchema:
     )
 
 
-
 def find_face_bulk_cli_parser(inputs):
     query_directory = inputs
     return {"query_directory": DirectoryInput(path=query_directory)}
@@ -281,6 +280,7 @@ class FindFaceBulkParameters(TypedDict):
     collection_name: str
     similarity_threshold: float
 
+
 def make_composite(a, b, out_path):
     im1, im2 = Image.open(a), Image.open(b)
     # resize them to the same height
@@ -293,6 +293,7 @@ def make_composite(a, b, out_path):
     out.save(out_path)
     return out_path
 
+
 # Endpoint that is used to find matches to a set of query images
 def find_face_bulk_endpoint(
     inputs: FindFaceBulkInputs, parameters: FindFaceBulkParameters
@@ -301,7 +302,12 @@ def find_face_bulk_endpoint(
     # Check CUDNN compatability
     check_cuDNN_version()
 
-    full_collection_name = DB.create_full_collection_name(parameters["collection_name"], config["detector_backend"], config["model_name"], False)
+    full_collection_name = DB.create_full_collection_name(
+        parameters["collection_name"],
+        config["detector_backend"],
+        config["model_name"],
+        False,
+    )
 
     # Call model function to find matches
     status, results = face_match_model.find_face_bulk(
@@ -312,11 +318,12 @@ def find_face_bulk_endpoint(
     log_info(status)
 
     if not status or not results:
-        return ResponseBody(root=TextResponse(value="No matches found or error occurred."))
+        return ResponseBody(
+            root=TextResponse(value="No matches found or error occurred.")
+        )
 
     files = []
     query_dir = inputs["query_directory"].path
-
 
     # compute stats
     total = len(results)
@@ -328,9 +335,9 @@ def find_face_bulk_endpoint(
         md.write(f"**Matched {matched}/{total} faces**\n")
     files.append(
         FileResponse(
-            file_type="markdown",   # <-- front-end will render this as markdown
+            file_type="markdown",  # <-- front-end will render this as markdown
             path=md_path,
-            title="stats.md"
+            title="stats.md",
         )
     )
     # create composite images for each query
@@ -341,12 +348,12 @@ def find_face_bulk_endpoint(
             continue
 
         # strip off extension to get “person name”
-        query_name = os.path.splitext(query_image)[0].rsplit('_', 1)[0]
+        query_name = os.path.splitext(query_image)[0].rsplit("_", 1)[0]
         # path to the *query*
         query_path = os.path.join(query_dir, query_image)
         # path to the *match*
         match_path = matches[0]
-        match_name = os.path.splitext(os.path.basename(match_path))[0].rsplit('_', 1)[0]
+        match_name = os.path.splitext(os.path.basename(match_path))[0].rsplit("_", 1)[0]
         # # path to the composite image
         # if match_name == query_name:
         #     comp_path = f"/tmp/{query_name}_pair.jpg"
@@ -365,28 +372,29 @@ def find_face_bulk_endpoint(
         out.paste(im1, (0, 0))
         out.paste(im2, (im1.width, 0))
 
-
         # Convert to base64
         buffer = io.BytesIO()
         out.save(buffer, format="JPEG")
         img_str = base64.b64encode(buffer.getvalue()).decode()
-        
+
         # Create a temporary HTML file with the base64 image
         html_fd, html_path = tempfile.mkstemp(suffix=".html")
         with os.fdopen(html_fd, "w") as html_file:
-            html_file.write(f"""
+            html_file.write(
+                f"""
             <html>
             <body>
                 <img src="data:image/jpeg;base64,{img_str}" alt="{query_name} vs {match_name}">
             </body>
             </html>
-            """)
-        
+            """
+            )
+
         files.append(
             FileResponse(
-                file_type=FileType.HTML,  
+                file_type=FileType.HTML,
                 path=html_path,
-                title=query_name + " vs " + match_name
+                title=query_name + " vs " + match_name,
             )
         )
 
@@ -397,7 +405,7 @@ def find_face_bulk_endpoint(
         #         title=query_name + " vs " + match_name
         #     )
         # )
-    
+
     # 1) start the table
     lines = [
         "| Name | Query | Matches | Match Names |",
@@ -425,8 +433,7 @@ def find_face_bulk_endpoint(
 
         # d) All match names (or only first)
         mnames = [
-            os.path.splitext(os.path.basename(mp))[0].rsplit("_", 1)[0]
-            for mp in mpaths
+            os.path.splitext(os.path.basename(mp))[0].rsplit("_", 1)[0] for mp in mpaths
         ]
         # or only first:
         # mnames = mnames[:1]
@@ -443,9 +450,9 @@ def find_face_bulk_endpoint(
     # append markdown as a downloadable "file" entry
     files.append(
         FileResponse(
-            file_type=FileType.MARKDOWN,           # generic file download
+            file_type=FileType.MARKDOWN,  # generic file download
             path=md_path,
-            title="results.md"
+            title="results.md",
         )
     )
 
@@ -463,9 +470,9 @@ def find_face_bulk_endpoint(
     # append CSV as a downloadable "file" entry
     files.append(
         FileResponse(
-            file_type=FileType.CSV,           # generic file download
+            file_type=FileType.CSV,  # generic file download
             path=csv_path,
-            title="results.csv"
+            title="results.csv",
         )
     )
 

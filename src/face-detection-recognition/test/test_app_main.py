@@ -34,8 +34,7 @@ try:
     from rb.api.models import (
         ResponseBody,
         TextResponse,
-        # BatchTextResponse,
-        # BatchFileResponse,
+        BatchFileResponse,
     )
     from rb.lib.common_tests import RBAppTest
 
@@ -349,8 +348,8 @@ class TestFaceMatch(RBAppTest):
         # Assert response
         assert response.status_code == 200
         body = ResponseBody(**response.json())
-        assert isinstance(body.root, TextResponse)
-        print(f"Find face bulk result: {body.root.value}...")
+        assert isinstance(body.root, BatchFileResponse)
+        print(f"Find face bulk result: {body.root}...")
 
     # @pytest.mark.skipif(not has_test_images, reason="Test images not available")
     # def test_07_find_face_bulk_testing_endpoint(self):
