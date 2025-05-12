@@ -471,7 +471,7 @@ def process_yolo_detections(
     model_name="ArcFace",
     face_confidence_threshold=0.02,
     detector_backend="yolov8",
-    separate_detections=False
+    separate_detections=False,
 ):
     """Process YOLO face detections and generate embeddings."""
     face_embeddings = []
@@ -480,7 +480,9 @@ def process_yolo_detections(
     regions = []
 
     detections_per_image = []
-    for boxes, scores, landmarks, image_path, img in zip(all_boxes, all_scores, all_landmarks, image_paths, imgs):
+    for boxes, scores, landmarks, image_path, img in zip(
+        all_boxes, all_scores, all_landmarks, image_paths, imgs
+    ):
 
         detections_per_image.append(len(boxes))
 
@@ -506,7 +508,11 @@ def process_yolo_detections(
             region["confidence"] = float(score)
 
             # Align face if landmarks available
-            if align and region["left_eye"] is not None and region["right_eye"] is not None:
+            if (
+                align
+                and region["left_eye"] is not None
+                and region["right_eye"] is not None
+            ):
                 face = align_face(face, img, region)
 
             if model_name == "Facenet512":
@@ -556,11 +562,11 @@ def process_yolo_detections(
         for _ in range(num_detections):
             if embeddings[i] is not None:
                 bbox = [
-                                regions[i]["x"],
-                                regions[i]["y"],
-                                regions[i]["w"],
-                                regions[i]["h"],
-                            ]
+                    regions[i]["x"],
+                    regions[i]["y"],
+                    regions[i]["w"],
+                    regions[i]["h"],
+                ]
                 image = sha256_image(path_strs[i], bbox)
                 cur_img_face_embeddings.append(
                     {
@@ -578,6 +584,5 @@ def process_yolo_detections(
             face_embeddings.append(cur_img_face_embeddings)
         else:
             face_embeddings.extend(cur_img_face_embeddings)
-
 
     return face_embeddings

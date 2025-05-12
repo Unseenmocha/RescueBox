@@ -34,7 +34,7 @@ def detect_faces_and_get_embeddings(
     input_size=(640, 640),
     visualize=False,
     height_factor=1.5,
-    separate_detections=False, # boolean whether or not to separate detections per img in output,
+    separate_detections=False,  # boolean whether or not to separate detections per img in output,
 ):
     script_dir = os.path.dirname(os.path.abspath(__file__))
     models_dir = os.path.join(script_dir, "models")
@@ -47,24 +47,24 @@ def detect_faces_and_get_embeddings(
 
     if visualize:
         os.makedirs("debug_detections", exist_ok=True)
-    
+
     try:
         if detector_onnx_path is None or not os.path.isfile(detector_onnx_path):
             logger.error(f"ONNX model not found: {detector_onnx_path}")
             return False, []
-        
+
         imgs = []
         original_sizes = []
 
         target_size = get_target_size(model_name)
-        
+
         for image_path in image_paths:
             img = cv2.imread(image_path)
             if img is None:
                 img_raw = cv2.imread(image_path, cv2.IMREAD_COLOR)
                 if img_raw is None:
                     logger.error(f"Failed to load image: {image_path}")
-                    img = np.zeros((480, 640, 3),dtype=np.uint8)
+                    img = np.zeros((480, 640, 3), dtype=np.uint8)
                 else:
                     img = cv2.cvtColor(img_raw, cv2.COLOR_BGR2RGB)
             else:
@@ -72,17 +72,16 @@ def detect_faces_and_get_embeddings(
 
             imgs.append(img)
 
-            
             original_size = (img.shape[1], img.shape[0])
             original_sizes.append(original_size)
 
-        all_boxes, all_scores, all_landmarks = [],[],[]
+        all_boxes, all_scores, all_landmarks = [], [], []
         if detector_backend == "retinaface":
             try:
-                for img_rgb,image_path in zip(imgs, image_paths):
+                for img_rgb, image_path in zip(imgs, image_paths):
                     boxes, scores, landmarks = detect_with_retinaface(
-                        image_path=image_path, # if isinstance(image_path, str) else None,
-                        img_rgb=img_rgb, # if not isinstance(image_path, str) else None,
+                        image_path=image_path,  # if isinstance(image_path, str) else None,
+                        img_rgb=img_rgb,  # if not isinstance(image_path, str) else None,
                         model_path=detector_onnx_path,
                         confidence_threshold=0.02,
                         visualize=visualize,
@@ -102,7 +101,7 @@ def detect_faces_and_get_embeddings(
                         all_boxes,
                         all_scores,
                         all_landmarks,
-                        separate_detections
+                        separate_detections,
                     )
                 elif model_name == "ArcFace":
                     # ArcFace-optimized pipeline
@@ -117,7 +116,7 @@ def detect_faces_and_get_embeddings(
                         all_boxes,
                         all_scores,
                         all_landmarks,
-                        separate_detections
+                        separate_detections,
                     )
 
                 if len(face_embeddings) > 0:
@@ -159,7 +158,7 @@ def detect_faces_and_get_embeddings(
         letterbox_info = None
         if detector_backend == "yolov8":
 
-            all_boxes, all_scores, all_landmarks = [],[],[]
+            all_boxes, all_scores, all_landmarks = [], [], []
             for img, original_size in zip(imgs, original_sizes):
 
                 scale = min(
@@ -178,8 +177,12 @@ def detect_faces_and_get_embeddings(
                 }
 
                 img_resized = cv2.resize(img, (new_w, new_h))
-                letterbox_img = np.zeros((input_size[1], input_size[0], 3), dtype=np.uint8)
-                letterbox_img[pad_h : pad_h + new_h, pad_w : pad_w + new_w, :] = img_resized
+                letterbox_img = np.zeros(
+                    (input_size[1], input_size[0], 3), dtype=np.uint8
+                )
+                letterbox_img[pad_h : pad_h + new_h, pad_w : pad_w + new_w, :] = (
+                    img_resized
+                )
                 img_norm = letterbox_img.astype(np.float32) / 255.0
                 img_input = np.expand_dims(img_norm.transpose(2, 0, 1), axis=0)
 
@@ -203,7 +206,9 @@ def detect_faces_and_get_embeddings(
                     vis_path = os.path.join(
                         debug_dir, os.path.basename(image_path) + "_detect.jpg"
                     )
-                    visualize_detections(img, boxes, scores, landmarks, save_path=vis_path)
+                    visualize_detections(
+                        img, boxes, scores, landmarks, save_path=vis_path
+                    )
 
             # Process detections and get embeddings
             face_embeddings = process_yolo_detections(
@@ -219,7 +224,7 @@ def detect_faces_and_get_embeddings(
                 model_name,
                 face_confidence_threshold,
                 detector_backend,
-                separate_detections=separate_detections
+                separate_detections=separate_detections,
             )
 
             if len(face_embeddings) > 0:

@@ -654,7 +654,7 @@ def process_retinaface_detections_for_facenet512(
     all_boxes,
     all_scores,
     all_landmarks,
-    separate_detections, # boolean whether or not to separate detections per img in output
+    separate_detections,  # boolean whether or not to separate detections per img in output
 ):
 
     face_embeddings = []
@@ -663,7 +663,9 @@ def process_retinaface_detections_for_facenet512(
     regions = []
 
     detections_per_image = []
-    for boxes, scores, landmarks, image_path, img in zip(all_boxes, all_scores, all_landmarks, image_paths, imgs):
+    for boxes, scores, landmarks, image_path, img in zip(
+        all_boxes, all_scores, all_landmarks, image_paths, imgs
+    ):
         detections_per_image.append(len(boxes))
         for i, (box, score, landmark) in enumerate(zip(boxes, scores, landmarks)):
             try:
@@ -743,7 +745,9 @@ def process_retinaface_detections_for_facenet512(
                         debug_dir, f"{os.path.basename(image_path)}_face_{i}.jpg"
                     )
                     if isinstance(detection, np.ndarray):
-                        cv2.imwrite(face_path, cv2.cvtColor(detection, cv2.COLOR_RGB2BGR))
+                        cv2.imwrite(
+                            face_path, cv2.cvtColor(detection, cv2.COLOR_RGB2BGR)
+                        )
 
                 detections.append(detection)
                 path_strs.append(image_path)
@@ -760,18 +764,18 @@ def process_retinaface_detections_for_facenet512(
 
     except Exception as e:
         logger.error(f"Error getting embedding for face {i}: {str(e)}")
-    
+
     i = 0
     for num_detections in detections_per_image:
         cur_img_face_embeddings = []
         for _ in range(num_detections):
             if embeddings[i] is not None:
                 bbox = [
-                                regions[i]["x"],
-                                regions[i]["y"],
-                                regions[i]["w"],
-                                regions[i]["h"],
-                            ]
+                    regions[i]["x"],
+                    regions[i]["y"],
+                    regions[i]["w"],
+                    regions[i]["h"],
+                ]
                 image = sha256_image(path_strs[i], bbox)
                 cur_img_face_embeddings.append(
                     {
@@ -912,7 +916,7 @@ def process_retinaface_detections_for_arcface(
     all_boxes,
     all_scores,
     all_landmarks,
-    separate_detections, # boolean whether or not to separate detections per img in output
+    separate_detections,  # boolean whether or not to separate detections per img in output
 ):
 
     face_embeddings = []
@@ -920,7 +924,9 @@ def process_retinaface_detections_for_arcface(
     path_strs = []
     regions = []
     detections_per_image = []
-    for boxes, scores, landmarks, image_path, img in zip(all_boxes, all_scores, all_landmarks, image_paths, imgs):
+    for boxes, scores, landmarks, image_path, img in zip(
+        all_boxes, all_scores, all_landmarks, image_paths, imgs
+    ):
         detections_per_image.append(len(boxes))
         for i, (box, score, landmark) in enumerate(zip(boxes, scores, landmarks)):
             try:
@@ -1010,7 +1016,9 @@ def process_retinaface_detections_for_arcface(
                         debug_dir, f"{os.path.basename(image_path)}_face_{i}.jpg"
                     )
                     if isinstance(detection, np.ndarray):
-                        cv2.imwrite(face_path, cv2.cvtColor(detection, cv2.COLOR_RGB2BGR))
+                        cv2.imwrite(
+                            face_path, cv2.cvtColor(detection, cv2.COLOR_RGB2BGR)
+                        )
 
                 detections.append(detection)
                 path_strs.append(image_path)
@@ -1034,11 +1042,11 @@ def process_retinaface_detections_for_arcface(
         for _ in range(num_detections):
             if embeddings[i] is not None:
                 bbox = [
-                                regions[i]["x"],
-                                regions[i]["y"],
-                                regions[i]["w"],
-                                regions[i]["h"],
-                            ]
+                    regions[i]["x"],
+                    regions[i]["y"],
+                    regions[i]["w"],
+                    regions[i]["h"],
+                ]
                 image = sha256_image(path_strs[i], bbox)
                 cur_img_face_embeddings.append(
                     {
@@ -1051,7 +1059,7 @@ def process_retinaface_detections_for_arcface(
                     }
                 )
             i += 1
-            
+
         if separate_detections:
             face_embeddings.append(cur_img_face_embeddings)
         else:

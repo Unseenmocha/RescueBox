@@ -40,7 +40,9 @@ class FaceMatchModel:
             for root, dirs, files in os.walk(image_directory_path):
                 files.sort()
                 for filename in files:
-                    if filename.lower().endswith((".png", ".jpg", ".jpeg", ".gif", ".bmp")):
+                    if filename.lower().endswith(
+                        (".png", ".jpg", ".jpeg", ".gif", ".bmp")
+                    ):
                         img_paths.append(os.path.join(image_directory_path, filename))
 
             end_idx = 0
@@ -56,14 +58,14 @@ class FaceMatchModel:
                     model_name,
                     detector_backend,
                     face_confidence_threshold,
-                    separate_detections=False
+                    separate_detections=False,
                 )
 
                 total_files_uploaded += upload_batch_size
 
                 self.DB.upload_embedding_to_database(
-                        embedding_outputs,
-                        collection_name,
+                    embedding_outputs,
+                    collection_name,
                 )
 
                 log_info(
@@ -80,7 +82,7 @@ class FaceMatchModel:
                     model_name,
                     detector_backend,
                     face_confidence_threshold,
-                    separate_detections=False
+                    separate_detections=False,
                 )
                 self.DB.upload_embedding_to_database(
                     embedding_outputs,
@@ -128,7 +130,7 @@ class FaceMatchModel:
                     model_name,
                     detector_backend,
                     face_confidence_threshold,
-                    separate_detections=False
+                    separate_detections=False,
                 )
                 matching_image_paths = []
                 # If image has a valid face, perform similarity check
@@ -188,27 +190,27 @@ class FaceMatchModel:
                     model_name,
                     detector_backend,
                     face_confidence_threshold,
-                    separate_detections=True
+                    separate_detections=True,
                 )
 
                 matching_image_paths = self.DB.query_bulk(
-                        collection_name,
-                        embedding_outputs,
-                        10,
-                        threshold,
-                        similarity_filter,
+                    collection_name,
+                    embedding_outputs,
+                    10,
+                    threshold,
+                    similarity_filter,
                 )
                 all_matching_image_paths.extend(matching_image_paths)
-            
+
             if (len(img_paths) % query_batch_size) != 0:
                 status, embedding_outputs = detect_faces_and_get_embeddings(
                     img_paths[end_idx:],
                     model_name,
                     detector_backend,
                     face_confidence_threshold,
-                    separate_detections=True
+                    separate_detections=True,
                 )
-                
+
                 matching_image_paths = self.DB.query_bulk(
                     collection_name,
                     embedding_outputs,
