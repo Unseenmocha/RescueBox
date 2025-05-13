@@ -51,7 +51,7 @@ class FaceMatchModel:
             total_files_uploaded = 0
 
             for batch in range(len(img_paths) // upload_batch_size):
-                start_idx = batch * upload_batch_size
+                start_idx = end_idx
                 end_idx = start_idx + upload_batch_size
                 status, embedding_outputs = detect_faces_and_get_embeddings(
                     img_paths[start_idx:end_idx],
@@ -183,7 +183,7 @@ class FaceMatchModel:
             end_idx = 0
 
             for batch in range(len(img_paths) // query_batch_size):
-                start_idx = batch * query_batch_size
+                start_idx = end_idx
                 end_idx = start_idx + query_batch_size
                 status, embedding_outputs = detect_faces_and_get_embeddings(
                     img_paths[start_idx:end_idx],

@@ -545,7 +545,7 @@ def process_yolo_detections(
                     cv2.imwrite(face_path, cv2.cvtColor(detection, cv2.COLOR_RGB2BGR))
 
             detections.append(detection)
-            path_strs.append(image_paths[i])
+            path_strs.append(image_path)
             regions.append(region)
 
     # Generate embedding
