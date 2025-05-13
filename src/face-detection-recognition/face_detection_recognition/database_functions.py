@@ -34,7 +34,7 @@ class Vector_Database:
         if testing == "true":
             self.client = chromadb.EphemeralClient()
         else:
-            self.client = chromadb.PersistentClient(path="../resources/data")
+            self.client = chromadb.PersistentClient(path=os.path.abspath(os.path.join(os.getcwd(), "src", "face-detection-recognition", "resources","data")))
 
     def create_full_collection_name(self, base_name, detector, model, isEnsemble):
         return f"{base_name}_{detector.lower()[0:2]}{model.lower()[0:2]}{self.ensemble_indicator if isEnsemble else self.single_indicator}"
