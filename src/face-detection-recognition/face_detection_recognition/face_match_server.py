@@ -694,14 +694,14 @@ def bulk_upload_endpoint(
             if len(used_indices) == 0
             else min(set(range(0, max(used_indices) + 2)) - set(used_indices))
         )
-        base_collection_name = f"{collection_name}{"" if index == 0 else f'-{index}'}"
+        index_str = "" if index == 0 else f"-{index}"
+        base_collection_name = f"{collection_name}{index_str}"
 
     elif parameters["dropdown_collection_name"] != available_collections[0]:
         base_collection_name = parameters["dropdown_collection_name"]
     else:
         base_collection_name = parameters["collection_name"]
-    # log_info("ERROR FOLLOWING THIS LINE **************************")
-    # log_info(new_collection_name)
+
     # Check CUDNN compatability
     check_cuDNN_version()
     # Get list of directory paths from input
@@ -878,7 +878,8 @@ def multi_pipeline_bulk_upload_endpoint(
             if len(used_indices) == 0
             else min(set(range(0, max(used_indices) + 2)) - set(used_indices))
         )
-        base_collection_name = f"{collection_name}{"" if index == 0 else f'-{index}'}"
+        index_str = "" if index == 0 else f"-{index}"
+        base_collection_name = f"{collection_name}{index_str}"
 
     elif (
         parameters["dropdown_collection_name"]
